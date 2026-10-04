@@ -62,8 +62,8 @@ sudo apt install imagemagick ffmpeg libimage-exiftool-perl eyed3 gnupg
 Clone the repository and make the scripts executable:
 
 ```bash
-git clone <repository-url>
-cd <repository-directory>
+git clone git@github.com:bsoliveira/thunar-custom-actions.git
+cd thunar-custom-actions
 chmod +x *
 ```
 
