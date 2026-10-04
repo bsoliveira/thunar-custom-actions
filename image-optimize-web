@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+#
+# Description: Optimize JPEG, PNG, and WebP image file(s) for web use.
+# Dependencies: ImageMagick
+
+set -u
+
+usage() {
+    echo "Usage: $(basename "$0") FILE [FILE ...]"
+    echo
+    echo "Optimize JPEG, PNG, and WebP image file(s) for web use."
+    echo
+    echo "Arguments:"
+    echo "  FILE    JPEG, PNG, or WebP image file(s)"
+    echo
+    echo "Options:"
+    echo "  -h, --help    Show this help message"
+}
+
+if [[ $# -eq 0 ]]; then
+    usage
+    exit 1
+fi
+
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    usage
+    exit 0
+fi
+
+for input_file in "$@"; do
+
+    if [[ ! -f "$input_file" ]]; then
+        echo "Skipped: file not found: $input_file"
+        continue
+    fi
+
+    extension="${input_file##*.}"
+    extension="${extension,,}"
+
+    case "$extension" in
+        jpg|jpeg)
+            output_file="${input_file%.*}_web.jpg"
+            options=(
+                -strip
+                -interlace Plane
+                -sampling-factor 4:2:0
+                -quality 85
+            )
+            ;;
+
+        png)
+            output_file="${input_file%.*}_web.png"
+            options=(
+                -strip
+                -define png:compression-level=9
+                -define png:compression-filter=5
+                -define png:compression-strategy=1
+            )
+            ;;
+
+        webp)
+            output_file="${input_file%.*}_web.webp"
+            options=(
+                -strip
+                -quality 85
+            )
+            ;;
+
+        *)
+            echo "Skipped: unsupported format (only JPEG, PNG, and WebP are supported): $(basename "$input_file")"
+            continue
+            ;;
+    esac
+
+    if [[ -e "$output_file" ]]; then
+        echo "Skipped: output file already exists: $(basename "$output_file")"
+        continue
+    fi
+
+    echo "Optimizing: $(basename "$input_file")"
+
+    if convert "$input_file" "${options[@]}" "$output_file"; then
+        echo "Done: $(basename "$output_file")"
+    else
+        rm -f -- "$output_file"
+        echo "Error: failed to optimize: $(basename "$input_file")"
+    fi
+
+    echo
+done

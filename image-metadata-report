@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+#
+# Description: Generate metadata reports for image file(s).
+# Dependencies: ExifTool
+
+set -u
+
+usage() {
+    echo "Usage: $(basename "$0") FILE [FILE ...]"
+    echo
+    echo "Generate metadata report for image file(s)."
+    echo
+    echo "Arguments:"
+    echo "  FILE    Image file(s) to analyze"
+    echo
+    echo "Options:"
+    echo "  -h, --help    Show this help message"
+}
+
+if [[ $# -eq 0 ]]; then
+    usage
+    exit 1
+fi
+
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    usage
+    exit 0
+fi
+
+for input_file in "$@"; do
+
+    if [[ ! -f "$input_file" ]]; then
+        echo "Skipped: file not found: $input_file"
+        continue
+    fi
+
+    output_file="${input_file%.*}_metadata.txt"
+
+    if [[ -e "$output_file" ]]; then
+        echo "Skipped: output file already exists: $(basename "$output_file")"
+        continue
+    fi
+
+    echo "Generating metadata report: $(basename "$input_file")"
+
+    if exiftool "$input_file" > "$output_file"; then
+        echo "Done: $(basename "$output_file")"
+    else
+        rm -f -- "$output_file"
+        echo "Error: failed to generate metadata report: $(basename "$input_file")"
+    fi
+
+    echo
+done

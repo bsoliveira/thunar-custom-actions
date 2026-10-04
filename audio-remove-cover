@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+#
+# Description: Remove embedded cover images from MP3 file(s).
+# Dependencies: eyeD3
+
+set -u
+
+usage() {
+    echo "Usage: $(basename "$0") FILE [FILE ...]"
+    echo
+    echo "Remove embedded cover images from MP3 file(s)."
+    echo
+    echo "Arguments:"
+    echo "  FILE    MP3 file(s) to process"
+    echo
+    echo "Options:"
+    echo "  -h, --help    Show this help message"
+}
+
+if [[ $# -eq 0 ]]; then
+    usage
+    exit 1
+fi
+
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    usage
+    exit 0
+fi
+
+for input_file in "$@"; do
+
+    if [[ ! -f "$input_file" ]]; then
+        echo "Skipped: file not found: $input_file"
+        continue
+    fi
+
+    if [[ "${input_file,,}" != *.mp3 ]]; then
+        echo "Skipped: only MP3 files are supported: $(basename "$input_file")"
+        continue
+    fi
+
+    echo "Removing cover: $(basename "$input_file")"
+
+    if eyeD3 --remove-all-images "$input_file"; then
+        echo "Done: $(basename "$input_file")"
+    else
+        echo "Error: failed to remove cover: $(basename "$input_file")"
+    fi
+
+    echo
+done

@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+#
+# Description: Resize image file(s) to a maximum dimension of 480 pixels.
+# Dependencies: ImageMagick
+
+set -u
+
+usage() {
+    echo "Usage: $(basename "$0") FILE [FILE ...]"
+    echo
+    echo "Resize image file(s) to a maximum dimension of 480 pixels."
+    echo
+    echo "Arguments:"
+    echo "  FILE    Image file(s) to resize"
+    echo
+    echo "Options:"
+    echo "  -h, --help    Show this help message"
+}
+
+if [[ $# -eq 0 ]]; then
+    usage
+    exit 1
+fi
+
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    usage
+    exit 0
+fi
+
+for input_file in "$@"; do
+
+    if [[ ! -f "$input_file" ]]; then
+        echo "Skipped: file not found: $input_file"
+        continue
+    fi
+
+    output_file="${input_file%.*}_small.${input_file##*.}"
+
+    if [[ -e "$output_file" ]]; then
+        echo "Skipped: output file already exists: $(basename "$output_file")"
+        continue
+    fi
+
+    echo "Resizing: $(basename "$input_file")"
+
+    if convert "$input_file" \
+        -resize '480x480>' \
+        "$output_file"
+    then
+        echo "Done: $(basename "$output_file")"
+    else
+        rm -f -- "$output_file"
+        echo "Error: failed to resize: $(basename "$input_file")"
+    fi
+
+    echo
+done

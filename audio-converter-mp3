@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+#
+# Description: Convert audio file(s) to MP3.
+# Dependencies: ffmpeg
+
+set -u
+
+usage() {
+    echo "Usage: $(basename "$0") FILE [FILE ...]"
+    echo
+    echo "Convert audio files to MP3."
+    echo
+    echo "Arguments:"
+    echo "  FILE    Audio file(s) to convert"
+    echo
+    echo "Options:"
+    echo "  -h, --help    Show this help message"
+}
+
+if [[ $# -eq 0 ]]; then
+    usage
+    exit 1
+fi
+
+for input_file in "$@"; do
+
+    if [[ ! -f "$input_file" ]]; then
+        echo "Skipped: file not found: $input_file"
+        continue
+    fi
+
+    if [[ "${input_file,,}" == *.mp3 ]]; then
+        echo "Skipped: already an MP3: $(basename "$input_file")"
+        continue
+    fi
+
+    output_file="${input_file%.*}.mp3"
+
+    if [[ -e "$output_file" ]]; then
+        echo "Skipped: output file already exists: $(basename "$output_file")"
+        continue
+    fi
+
+    echo "Converting: $(basename "$input_file")"
+
+    if ffmpeg -i "$input_file" \
+        -map_metadata 0 \
+        -c:a libmp3lame \
+        -q:a 2 \
+        "$output_file"
+    then
+        echo "Done: $(basename "$output_file")"
+    else
+        echo "Error: failed to convert: $(basename "$input_file")"
+        rm -f "$output_file"
+    fi
+
+    echo
+done

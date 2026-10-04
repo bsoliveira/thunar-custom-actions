@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+#
+# Description: Decrypt a GPG-encrypted file.
+# Dependencies: gnupg
+
+set -u
+
+usage() {
+    echo "Usage: $(basename "$0") FILE"
+    echo
+    echo "Decrypt a GPG-encrypted file."
+    echo
+    echo "Arguments:"
+    echo "  FILE    GPG-encrypted file (.gpg)"
+    echo
+    echo "Options:"
+    echo "  -h, --help    Show this help message"
+}
+
+if [[ $# -eq 0 ]]; then
+    usage
+    exit 1
+fi
+
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    usage
+    exit 0
+fi
+
+input_file="$1"
+
+if [[ ! -f "$input_file" ]]; then
+    echo "Error: file not found: $input_file"
+    exit 1
+fi
+
+if [[ "${input_file,,}" != *.gpg ]]; then
+    echo "Error: only .gpg files are supported."
+    exit 1
+fi
+
+output_file="${input_file%.gpg}"
+
+if [[ -e "$output_file" ]]; then
+    echo "Error: output file already exists: $(basename "$output_file")"
+    exit 1
+fi
+
+echo "Decrypting: $(basename "$input_file")"
+
+if gpg --decrypt --output "$output_file" "$input_file"; then
+    echo "Done: $(basename "$output_file")"
+else
+    rm -f "$output_file"
+    echo "Error: failed to decrypt: $(basename "$input_file")"
+    exit 1
+fi
